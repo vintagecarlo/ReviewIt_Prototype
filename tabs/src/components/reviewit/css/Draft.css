@@ -1,0 +1,14 @@
+.customCardSpace {
+  margin: 10px;
+}
+
+.customCardFluid {
+  width: 100% !important;
+  height: min-content !important;
+  background-color: #fff !important;
+}
+
+#emailAddress{
+  margin-left: 20px !important; 
+  width: 100% !important;
+}
