@@ -1,6 +1,9 @@
 import React from "react";
 import "../css/Draft.css";
-import { BearerTokenAuthProvider, createApiClient, TeamsFx } from "@microsoft/teamsfx";
+import Profile from "./Profile";
+import { BearerTokenAuthProvider, createApiClient, TeamsFx} from "@microsoft/teamsfx";
+import { createMicrosoftGraphClient } from "@microsoft/teamsfx";
+import { app } from '@microsoft/teams-js';
 import { Button, CardFooter, CardHeader, CardBody, Card, Datepicker, Dropdown, Flex, Dialog, RadioGroup, Text, TextArea } from "@fluentui/react-northstar";
 
 export class Draft extends React.Component {
@@ -8,9 +11,10 @@ export class Draft extends React.Component {
         super(props);
         this.state = {
             address  : null,
-            comment  : null,
+            comment  : "",
             date     : null,
-            priority : "normal"
+            priority : "normal",
+            bypass : false
         }
         
         this.handleChange =  this.handleChange.bind(this);
@@ -21,12 +25,19 @@ export class Draft extends React.Component {
 
     async componentDidMount() {
         await this.initTeamsFx();
+        //await this.initGraphApi();
     }
 
     async initTeamsFx() {
-        const teamsfx = new TeamsFx();     
+        const teamsfx = new TeamsFx();
+        // Get the user info from access token
+        const userInfo = await teamsfx.getUserInfo();
+        this.userInfo = userInfo   
+
         this.teamsfx = teamsfx;
-        
+        this.scope = ["User.Read.All"];
+        this.channelOrChatId = await this.getChannelOrChatId();
+
         const credential = teamsfx.getCredential();
         const apiBaseUrl = teamsfx.getConfig("apiEndpoint") + "/api/";
         // createApiClient(...) creates an Axios instance which uses BearerTokenAuthProvider to inject token to request header
@@ -34,6 +45,56 @@ export class Draft extends React.Component {
           apiBaseUrl,
           new BearerTokenAuthProvider(async () => (await credential.getToken("")).token));
         this.apiClient = apiClient;
+    }
+
+    async initGraphApi() {
+      if (!await this.checkIsConsentNeeded()) {
+        const graphClient = await createMicrosoftGraphClient(this.teamsfx, this.scope);
+        //const memberList = await graphClient
+          //.api("/teams/2ab9c796-2902-45f8-b712-7c5a63cf41c4/channels/19:20bc1df46b1148e9b22539b83bc66809@thread.skype/members")
+          //.get();
+        const memberList = (await graphClient.api(`/users/${this.userInfo.objectId}`).get()).displayName;
+        this.memberList = memberList;
+      }
+    }
+
+    async checkIsConsentNeeded() {
+      try {
+        await this.teamsfx.getCredential().getToken(this.scope);
+      } catch (error) {
+        this.setState({
+          bypass: true
+        });
+        return true;
+      }
+      this.setState({
+        bypass: false
+      });
+      return false;
+    }
+
+    async getChannelOrChatId() {
+      return new Promise((resolve) => {
+        app.getContext().then((context) => {
+          if (context.channelId) {
+            resolve(context.channelId);
+          } else if (context.chatId) {
+            resolve(context.chatId);
+          } else {
+            resolve(this.userInfo.objectId);
+          }
+        });
+      });
+    }
+ 
+    async loginBtnClick(){
+      try {
+        await this.teamsfx.login(this.scope);
+      } catch (err) {
+        alert("Login failed: " + err);
+        return;
+      }
+      await this.initGraphApi()
     }
 
     handleChange(event, option){
@@ -76,8 +137,8 @@ export class Draft extends React.Component {
        var apiCall = null;
 
        if(this.isValidData(data)){
-         apiCall = await this.callFunctionWithErrorHandling("draftApi", "post", data);
-         if(apiCall) this.clearComponentState();
+         //apiCall = await this.callFunctionWithErrorHandling("draftApi", "post", data);
+         if(true) this.clearComponentState();
        } else {
             //TODO: to add proper error handling and UI display
             alert('All fields are required!\naddresses: ' + ((!this.state.address) ? "?" : this.state.address ) 
@@ -101,7 +162,7 @@ export class Draft extends React.Component {
        {year: 'numeric', month: '2-digit',day: '2-digit'})
        .format(date)
     }
-    
+
     //TODO: To be added in common utility file for performing api call
     async callFunctionWithErrorHandling(command, method, options, params) {
         var message = [];
@@ -144,7 +205,7 @@ export class Draft extends React.Component {
       this.setState(
         {
           address  : null,
-          comment  : null,
+          comment  : "",
           date     : null,
           priority : "normal"
         }
@@ -191,7 +252,12 @@ export class Draft extends React.Component {
         ]
         return (
             <div>
-              <div className="section-margin">
+              {this.state.bypass === true && <div className="auth">
+                <Profile userInfo={this.userInfo} />
+                <h2>Welcome to ReviewIt Alpha App</h2>
+                <Button primary onClick={() => this.loginBtnClick()}>Start</Button>
+              </div>}
+              {this.state.bypass === false && <div className="section-margin">
                   <Card aria-roledescription="draft"
                     elevated
                     inverted
@@ -252,7 +318,7 @@ export class Draft extends React.Component {
                           </Flex>
                       </CardFooter>
                   </Card>
-              </div>
+              </div>}
             </div>
         )
     }

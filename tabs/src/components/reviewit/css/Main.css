@@ -78,6 +78,20 @@
   .error {
     color: red;
   }
-  
-  
-    
+
+.auth {
+    margin-top: 30vh;
+}
+
+.auth .profile {
+    margin: auto;
+}
+
+.auth h2 {
+    text-align: center;
+}
+
+.auth button {
+    display: block;
+    margin: 32px auto;
+}

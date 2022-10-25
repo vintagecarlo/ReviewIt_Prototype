@@ -26,7 +26,8 @@
             "hosting": "azure-function",
             "functionNames": [
                 "getUserProfile",
-                "draftApi"
+                "draftApi",
+                "testing"
             ],
             "deploy": true,
             "build": true,
