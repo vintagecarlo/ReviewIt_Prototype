@@ -14,5 +14,6 @@
             "color": "resources/color.png",
             "outline": "resources/outline.png"
         }
-    }
+    },
+    "skipAddingSqlUser" : true
 }

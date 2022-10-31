@@ -14,7 +14,7 @@ export class Draft extends React.Component {
             comment  : "",
             date     : null,
             priority : "normal",
-            bypass : false
+            bypass : undefined
         }
         
         this.handleChange =  this.handleChange.bind(this);
@@ -25,7 +25,7 @@ export class Draft extends React.Component {
 
     async componentDidMount() {
         await this.initTeamsFx();
-        //await this.initGraphApi();
+        await this.initGraphApi();
     }
 
     async initTeamsFx() {
@@ -35,7 +35,7 @@ export class Draft extends React.Component {
         this.userInfo = userInfo   
 
         this.teamsfx = teamsfx;
-        this.scope = ["User.Read.All"];
+        this.scope = ["User.Read", "User.ReadBasic.All"];
         this.channelOrChatId = await this.getChannelOrChatId();
 
         const credential = teamsfx.getCredential();
@@ -50,7 +50,7 @@ export class Draft extends React.Component {
     async initGraphApi() {
       if (!await this.checkIsConsentNeeded()) {
         const graphClient = await createMicrosoftGraphClient(this.teamsfx, this.scope);
-        //const memberList = await graphClient
+       // const memberList = await graphClient
           //.api("/teams/2ab9c796-2902-45f8-b712-7c5a63cf41c4/channels/19:20bc1df46b1148e9b22539b83bc66809@thread.skype/members")
           //.get();
         const memberList = (await graphClient.api(`/users/${this.userInfo.objectId}`).get()).displayName;
@@ -137,8 +137,8 @@ export class Draft extends React.Component {
        var apiCall = null;
 
        if(this.isValidData(data)){
-         //apiCall = await this.callFunctionWithErrorHandling("draftApi", "post", data);
-         if(true) this.clearComponentState();
+         apiCall = await this.callFunctionWithErrorHandling("draftApi", "post", data);
+         if(apiCall) this.clearComponentState();
        } else {
             //TODO: to add proper error handling and UI display
             alert('All fields are required!\naddresses: ' + ((!this.state.address) ? "?" : this.state.address ) 
@@ -155,7 +155,7 @@ export class Draft extends React.Component {
         (JSON.stringify(data.address) !== null && data.comment !== null && data.duedate !== null) &&
         (JSON.stringify(data.address) !== undefined && data.comment !== undefined && data.duedate !== undefined)) 
     }
-    
+     
     //TODO: To be added in common utility file for date formatting
     dateFormatter =(date)=>{
        return new Intl.DateTimeFormat('en-US', 

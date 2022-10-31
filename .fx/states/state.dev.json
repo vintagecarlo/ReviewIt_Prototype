@@ -1,0 +1,56 @@
+{
+    "solution": {
+        "provisionSucceeded": true,
+        "teamsAppTenantId": "db65e935-9554-4ebc-baa6-097f3f201bf8",
+        "subscriptionId": "5914efa3-1ff7-4fe5-84a8-438551bf9539",
+        "subscriptionName": "Azure subscription 1",
+        "tenantId": "a3488d16-c878-4d4b-a62e-12895b8b4f0f",
+        "needCreateResourceGroup": false,
+        "resourceGroupName": "ReviewIt_TBranch",
+        "location": "australiasoutheast",
+        "resourceNameSuffix": "7d733e"
+    },
+    "fx-resource-appstudio": {
+        "tenantId": "db65e935-9554-4ebc-baa6-097f3f201bf8",
+        "teamsAppId": "14b94031-0875-45db-8e04-9a795f51fa56"
+    },
+    "fx-resource-frontend-hosting": {
+        "indexPath": "/index.html#",
+        "domain": "reviewitprb0a3betab.z26.web.core.windows.net",
+        "endpoint": "https://reviewitprb0a3betab.z26.web.core.windows.net",
+        "storageResourceId": "/subscriptions/5914efa3-1ff7-4fe5-84a8-438551bf9539/resourceGroups/ReviewIt_TBranch/providers/Microsoft.Storage/storageAccounts/reviewitprb0a3betab"
+    },
+    "fx-resource-aad-app-for-teams": {
+        "clientId": "a42acd48-adeb-4ad4-9bdd-6d2f2c1579a3",
+        "clientSecret": "{{fx-resource-aad-app-for-teams.clientSecret}}",
+        "objectId": "68931e53-a042-4890-821e-9c691313ec3b",
+        "oauth2PermissionScopeId": "951ef9e2-cab0-4fd9-8a55-fb6d29035078",
+        "tenantId": "db65e935-9554-4ebc-baa6-097f3f201bf8",
+        "oauthHost": "https://login.microsoftonline.com",
+        "oauthAuthority": "https://login.microsoftonline.com/db65e935-9554-4ebc-baa6-097f3f201bf8",
+        "applicationIdUris": "api://reviewitprb0a3betab.z26.web.core.windows.net/a42acd48-adeb-4ad4-9bdd-6d2f2c1579a3",
+        "frontendEndpoint": "https://reviewitprb0a3betab.z26.web.core.windows.net"
+    },
+    "fx-resource-azure-sql": {
+        "admin": "BoPRIadmin",
+        "adminPassword": "{{fx-resource-azure-sql.adminPassword}}",
+        "sqlResourceId": "/subscriptions/5914efa3-1ff7-4fe5-84a8-438551bf9539/resourceGroups/ReviewIt_TBranch/providers/Microsoft.Sql/servers/reviewitprb0a3be",
+        "sqlEndpoint": "reviewitprb0a3be.database.windows.net",
+        "databaseName": "reviewitprb0a3be",
+        "databaseName_b3d1ac": "reviewitprb0a3be_b3d1ac",
+        "databaseName_1585d4": "reviewitprb0a3be_1585d4"
+    },
+    "fx-resource-identity": {
+        "identityName": "reviewitprb0a3be",
+        "identityResourceId": "/subscriptions/5914efa3-1ff7-4fe5-84a8-438551bf9539/resourceGroups/ReviewIt_TBranch/providers/Microsoft.ManagedIdentity/userAssignedIdentities/reviewitprb0a3be",
+        "identityClientId": "092ea3e5-308c-427b-94bc-bab4a5a29fc1"
+    },
+    "fx-resource-function": {
+        "sku": "B1",
+        "appName": "reviewitprb0a3beapi",
+        "domain": "reviewitprb0a3beapi.azurewebsites.net",
+        "appServicePlanName": "reviewitprb0a3beapi",
+        "functionAppResourceId": "/subscriptions/5914efa3-1ff7-4fe5-84a8-438551bf9539/resourceGroups/ReviewIt_TBranch/providers/Microsoft.Web/sites/reviewitprb0a3beapi",
+        "functionEndpoint": "https://reviewitprb0a3beapi.azurewebsites.net"
+    }
+}
