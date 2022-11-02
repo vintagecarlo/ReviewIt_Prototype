@@ -1,6 +1,7 @@
 import React from "react";
 import "../css/Draft.css";
 import Profile from "./Profile";
+import defaultPhoto from '../../images/default-photo.png'
 import { BearerTokenAuthProvider, createApiClient, TeamsFx} from "@microsoft/teamsfx";
 import { createMicrosoftGraphClient } from "@microsoft/teamsfx";
 import { app } from '@microsoft/teams-js';
@@ -14,7 +15,8 @@ export class Draft extends React.Component {
             comment  : "",
             date     : null,
             priority : "normal",
-            bypass : undefined
+            bypass : undefined,
+            addressList : []
         }
         
         this.handleChange =  this.handleChange.bind(this);
@@ -35,8 +37,7 @@ export class Draft extends React.Component {
         this.userInfo = userInfo   
 
         this.teamsfx = teamsfx;
-        this.scope = ["User.Read", "User.ReadBasic.All"];
-        this.channelOrChatId = await this.getChannelOrChatId();
+        this.scope = ["User.Read", "User.ReadBasic.All", "ChannelMember.Read.All", "ChannelMember.ReadWrite.All"];
 
         const credential = teamsfx.getCredential();
         const apiBaseUrl = teamsfx.getConfig("apiEndpoint") + "/api/";
@@ -48,13 +49,26 @@ export class Draft extends React.Component {
     }
 
     async initGraphApi() {
+      //STUBS: if tab context teams and channel id are undefined, use STUBS
+      const inputItems = [{header: 'Esmeraldo Ybanez',image: 'https://fabricweb.azureedge.net/fabric-website/assets/images/avatar/RobertTolbert.jpg',content: 'Software Engineer',},
+      {header: 'Ian Steven Colina',image: 'https://fabricweb.azureedge.net/fabric-website/assets/images/avatar/WandaHoward.jpg',content: 'UX Designer 2',},
+      {header: 'Jhon Carlo Vano',image: 'https://fabricweb.azureedge.net/fabric-website/assets/images/avatar/TimDeboer.jpg',content: 'Principal Software Engineering Manager',},]
       if (!await this.checkIsConsentNeeded()) {
-        const graphClient = await createMicrosoftGraphClient(this.teamsfx, this.scope);
-       // const memberList = await graphClient
-          //.api("/teams/2ab9c796-2902-45f8-b712-7c5a63cf41c4/channels/19:20bc1df46b1148e9b22539b83bc66809@thread.skype/members")
-          //.get();
-        const memberList = (await graphClient.api(`/users/${this.userInfo.objectId}`).get()).displayName;
-        this.memberList = memberList;
+        try{
+          const context = await app.getContext();
+          const graphClient = await createMicrosoftGraphClient(this.teamsfx, this.scope);
+
+          if(context.team && context.channel) {
+            var channelMembers = await graphClient
+            .api("/teams/"+context.team.groupId+"/channels/"+context.channel.id+"/members")
+            .get();
+            this.setState({addressList : this.transformGraphData(channelMembers)})
+          }      
+          else this.setState({addressList : inputItems});
+
+        }catch(err){
+          alert(err)
+        }
       }
     }
 
@@ -62,29 +76,11 @@ export class Draft extends React.Component {
       try {
         await this.teamsfx.getCredential().getToken(this.scope);
       } catch (error) {
-        this.setState({
-          bypass: true
-        });
+        this.setState({bypass: true});
         return true;
       }
-      this.setState({
-        bypass: false
-      });
+      this.setState({bypass: false});
       return false;
-    }
-
-    async getChannelOrChatId() {
-      return new Promise((resolve) => {
-        app.getContext().then((context) => {
-          if (context.channelId) {
-            resolve(context.channelId);
-          } else if (context.chatId) {
-            resolve(context.chatId);
-          } else {
-            resolve(this.userInfo.objectId);
-          }
-        });
-      });
     }
  
     async loginBtnClick(){
@@ -126,27 +122,38 @@ export class Draft extends React.Component {
     }
 
     async handleSubmit(event) {
-       var name = JSON.parse((JSON.stringify(this.state.address)));
-       var data = {
-         address : name[0].header,
+      var addresslst = JSON.parse((JSON.stringify(this.state.address)));
+      let concatAddress = ""
+
+      if(addresslst){
+        let tempLstAddress = []
+        addresslst.forEach(address => {
+          tempLstAddress.push(address.content)
+        });
+        
+        concatAddress = tempLstAddress.toString()
+      }
+
+      var data = {
+         address : concatAddress,
          duedate : this.state.date,
          comment : this.state.comment,
          prio    : this.state.priority
-       };
+      };
 
-       var apiCall = null;
+      var apiCall = null;
 
-       if(this.isValidData(data)){
+      if(this.isValidData(data)){
          apiCall = await this.callFunctionWithErrorHandling("draftApi", "post", data);
          if(apiCall) this.clearComponentState();
-       } else {
+      } else {
             //TODO: to add proper error handling and UI display
             alert('All fields are required!\naddresses: ' + ((!this.state.address) ? "?" : this.state.address ) 
             + '\ncomment: ' + ((!this.state.comment) ? "?" : this.state.comment)
             + '\ndate: ' + ((!this.state.date) ? "?" : this.state.date)
             + '\nimportance: ' + this.state.priority);
-       }
-       event.preventDefault();
+      }
+      event.preventDefault();
     }
     
     //TODO: To create common utility file for data validity checking
@@ -161,6 +168,24 @@ export class Draft extends React.Component {
        return new Intl.DateTimeFormat('en-US', 
        {year: 'numeric', month: '2-digit',day: '2-digit'})
        .format(date)
+    }
+
+    transformGraphData(data){
+      if(!data) return []
+      var list = data.value
+      var memberList = []
+
+      list.forEach(target => {
+        let image = defaultPhoto
+        let member = {
+          header : target.displayName,
+          image : image,
+          content : target.email
+        }
+        memberList.push(member)
+      });
+
+      return memberList
     }
 
     //TODO: To be added in common utility file for performing api call
@@ -202,14 +227,8 @@ export class Draft extends React.Component {
 
     clearComponentState(){
       //TODO: to add proper component clear both in UI and value
-      this.setState(
-        {
-          address  : null,
-          comment  : "",
-          date     : null,
-          priority : "normal"
-        }
-      );
+      //Verryyy disappointing cheap tactic because fluent ui components are so difficult to clear
+      window.location.reload(false)
     }
 
     render(){
@@ -232,24 +251,6 @@ export class Draft extends React.Component {
             }
         ] 
         
-        //TODO:  To use Microsoft graph API in retrieving user data of members in the same organization.
-        const inputItems = [
-            {
-              header: 'Esmeraldo Ybanez',
-              image: 'https://fabricweb.azureedge.net/fabric-website/assets/images/avatar/RobertTolbert.jpg',
-              content: 'Software Engineer',
-            },
-            {
-              header: 'Ian Steven Colina',
-              image: 'https://fabricweb.azureedge.net/fabric-website/assets/images/avatar/WandaHoward.jpg',
-              content: 'UX Designer 2',
-            },
-            {
-              header: 'Jhon Carlo Vano',
-              image: 'https://fabricweb.azureedge.net/fabric-website/assets/images/avatar/TimDeboer.jpg',
-              content: 'Principal Software Engineering Manager',
-            },
-        ]
         return (
             <div>
               {this.state.bypass === true && <div className="auth">
@@ -279,7 +280,7 @@ export class Draft extends React.Component {
                                   fluid
                                   onChange={this.handleChange}
                                   aria-required={true}
-                                  items={inputItems}
+                                  items={this.state.addressList}
                                   placeholder="Start typing a name"
                                   noResultsMessage="We couldn't find any matches."
                                   a11ySelectedItemsMessage="Press Delete or Backspace to remove"

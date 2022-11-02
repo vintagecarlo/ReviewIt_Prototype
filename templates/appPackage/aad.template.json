@@ -27,6 +27,14 @@
                 {
                     "id": "User.ReadBasic.All",
                     "type": "Scope"
+                },
+                {
+                    "id": "ChannelMember.Read.All",
+                    "type": "Scope"
+                },
+                {
+                    "id": "ChannelMember.ReadWrite.All",
+                    "type": "Scope"
                 }
             ]
         }
